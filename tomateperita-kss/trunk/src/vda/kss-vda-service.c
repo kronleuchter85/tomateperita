@@ -1,0 +1,95 @@
+/*
+ * kss-vda-service.c
+ *
+ *  Created on: 29/05/2011
+ *      Author: gonzalo
+ */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "linux-commons-logging.h"
+#include "linux-commons-mps.h"
+#include "linux-commons-list.h"
+#include "linux-commons-socket.h"
+#include "linux-commons-remote-services.h"
+
+#include "kss-vda-service.h"
+#include "kss-state.h"
+#include "kss-utils.h"
+#include "kss-configuration.h"
+#include "kss-vda-state.h"
+
+
+
+	void * runVdaServiceThread(void * arg){
+
+		if(isInfoEnabled()){
+			info( "Quedando a la espera de conecciones VDA");
+		}
+
+		ServerSocket * serverSocket = openServerConnection(getVdaListenPort());
+		setVdaServerSocket(serverSocket);
+		ListenSocket listenSocket;
+
+		//no se para q se esta haciendo esto!
+		//setVdaServerConnection(serverSocket);
+
+		createConnectedVdas();
+		createMountedVdas();
+
+		MpsMessage * mpsRequest = NULL;
+		MpsMessage * response = NULL;
+		VdaComponent * vdaComponent = NULL;
+		RuntimeErrorValidator * validator = NULL;
+		Iterator * paramsIterator = NULL;
+
+		do{
+
+			validator = buildErrorSuccessValidator();
+			listenSocket = acceptConnection(serverSocket);
+
+			doHandshake(listenSocket , VDA_HANDSHAKE , validator);
+
+			if(hasError(validator)){
+				error(validator->errorDescription);
+				return NULL;
+			}
+
+			/*
+			 * Este mpsRequest contiene la informacion del VDA
+			 * que el cliente envia en la primera coneccion del mismo.
+			 */
+			mpsRequest = receiveMpsMessage(listenSocket , validator);
+
+			if(mpsRequest == NULL)
+				break;
+
+			paramsIterator = buildIterator(mpsRequest->commands);
+			char * vdaName = hasMoreElements(paramsIterator)? next(paramsIterator) : NULL;
+
+			vdaComponent = buildVdaComponent(vdaName , listenSocket);
+
+			if(vdaComponent == NULL){
+				setError(validator , "El nombre del Vda es nulo");
+				replyValidationError(listenSocket , mpsRequest , validator);
+			}else{
+				response = buildMpsMessage(
+					mpsRequest->descriptorId ,
+					MPS_RESPONSE_STATUS_CODE_SUCCESS ,
+					mpsRequest->operationName , NULL);
+
+				sendMpsMessage(response , listenSocket , validator);
+
+				if ( isReconnectedVda(vdaComponent) ) {
+					overwriteConnectedVda(vdaComponent);
+				} else {
+					addConnectedVda(vdaComponent);
+				}
+			}
+
+		}while(isKssRunningStatus());
+
+		close(getVdaServerSocket());
+
+		return EXIT_SUCCESS;
+	}

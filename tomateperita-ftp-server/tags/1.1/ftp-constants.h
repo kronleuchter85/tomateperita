@@ -1,0 +1,19 @@
+/**
+ * Puertos y host donde escucha el servidor
+ */
+
+#define HEAP_SIZE_PER_THREAD 1024
+
+/**
+ * Constantes
+ */
+#define KERNEL_STATUS_CONTINUE 1
+#define KERNEL_STATUS_INTERRUPT_BY_EXTERNAL_REQUEST 2
+#define KERNEL_STATUS_INTERRUPT_BY_INTERNAL_REQUEST 3
+
+#define CLOSED_BY_FAULT 1
+#define CLOSED_SUCCESSFULLY 0
+
+#define FTP_DATA_MODE_INACTIVE 0
+#define FTP_DATA_MODE_ACTIVE 1
+#define FTP_DATA_MODE_PASIVE 2

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests>
+    <FailedTest id="1">
+      <Name>ARIExcludeIncludeCarriersTest.cpp::SEG_FAULT</Name>
+      <FailureType>Segfault</FailureType>
+      <Location>
+      <File>ARIExcludeIncludeCarriersTest.cpp</File>
+      <Line>1</Line>
+      </Location>
+      <Message>Segfault Occurred</Message>
+    </FailedTest>
+  </FailedTests>
+  <Statistics>
+    <Tests>1</Tests>
+    <FailuresTotal>1</FailuresTotal>
+    <Errors>1</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>
